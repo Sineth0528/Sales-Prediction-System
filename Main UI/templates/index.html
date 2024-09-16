@@ -1,0 +1,174 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title>Sales Prediction System</title>
+    <link href="/assets/vendor/fontawesome/css/fontawesome.min.css" rel="stylesheet">
+    <link href="/assets/vendor/fontawesome/css/solid.min.css" rel="stylesheet">
+    <link href="/assets/vendor/fontawesome/css/brands.min.css" rel="stylesheet">
+    <link href="/assets/vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+    <link href="/assets/css/master.css" rel="stylesheet">
+    <link href="/assets/vendor/flagiconcss/css/flag-icon.min.css" rel="stylesheet">
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+</head>
+
+<body>
+    <div class="wrapper">
+        <nav id="sidebar" class="active">
+            <div class="sidebar-header">
+                <img src="/assets/img/bootstraper-logo.png" alt="bootraper logo" class="app-logo">
+            </div>
+            <ul class="list-unstyled components text-secondary">
+                <li>
+                    <a href="{{ url_for('index') }}"><i class="fas fa-home"></i> Dashboard</a>
+                </li>
+                <li>
+                    <a href="{{ url_for('predict') }}"><i class="fas fa-atom"></i>Predict Data</a>
+                </li>
+            </ul>
+        </nav>
+        <div id="body" class="active">
+
+            <!-- navbar navigation component -->
+            <nav class="navbar navbar-expand-lg navbar-white bg-white">
+                <button type="button" id="sidebarCollapse" class="btn btn-light">
+                    <i class="fas fa-bars"></i><span></span>
+                </button>
+                <div class="collapse navbar-collapse" id="navbarSupportedContent">
+                    <ul class="nav navbar-nav ms-auto">
+                        <li class="nav-item">
+                            <a class="nav-link" href="{{ url_for('logout') }}">
+                                <i class="fas fa-sign-out-alt"></i> Logout
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </nav>
+            <!-- end of navbar navigation -->
+
+            <div class="content">
+                <div class="container">
+                    <div class="row">
+                        <div class="col-md-12 page-header">
+                            <div class="page-pretitle">Overview</div>
+                            <h2 class="page-title">My Dashboard</h2>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-sm-6 col-md-6 col-lg-3 mt-3">
+                            <div class="card">
+                                <div class="content">
+                                    <div class="row">
+                                        <div class="col-sm-4">
+                                            <div class="icon-big text-center">
+                                                <i class="teal fas fa-warehouse"></i>
+                                            </div>
+                                        </div>
+                                        <div class="col-sm-8">
+                                            <div class="detail">
+                                                <p class="detail-subtitle">Show Rooms</p>
+                                                <span class="number">Rs. {{ card_data.get('Show Rooms', {}).get('value',
+                                                    0)
+                                                    }}</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="footer">
+                                        <hr />
+                                        <div class="stats">
+                                            <i class="fas fa-calendar"></i> For: {{ maxdate }}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-sm-6 col-md-6 col-lg-3 mt-3">
+                            <div class="card">
+                                <div class="content">
+                                    <div class="row">
+                                        <div class="col-sm-4">
+                                            <div class="icon-big text-center">
+                                                <i class="olive fas fa-building"></i>
+                                            </div>
+                                        </div>
+                                        <div class="col-sm-8">
+                                            <div class="detail">
+                                                <p class="detail-subtitle">Corporate</p>
+                                                <span class="number">Rs. {{ card_data.get('Corporate', {}).get('value',
+                                                    0)
+                                                    }}</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="footer">
+                                        <hr />
+                                        <div class="stats">
+                                            <i class="fas fa-calendar"></i> For: {{ maxdate }}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-sm-6 col-md-6 col-lg-3 mt-3">
+                            <div class="card">
+                                <div class="content">
+                                    <div class="row">
+                                        <div class="col-sm-4">
+                                            <div class="icon-big text-center">
+                                                <i class="violet fas fa-shopping-basket"></i>
+                                            </div>
+                                        </div>
+                                        <div class="col-sm-8">
+                                            <div class="detail">
+                                                <p class="detail-subtitle">Retail</p>
+                                                <span class="number">Rs. {{ card_data.get('Retail', {}).get('value', 0)
+                                                    }}</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="footer">
+                                        <hr />
+                                        <div class="stats">
+                                            <i class="fas fa-calendar"></i> For: {{ maxdate }}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-12">
+                            <div class="row">
+                                <div class="col-md-12">
+                                    <div class="card">
+                                        <div class="card-header">
+                                            <h5 class="card-title">Sales Trends</h5>
+                                        </div>
+                                        <div class="card-body">
+                                            <div id="sales_chart" style="height: 400px;"></div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    </div>
+    <script src="/assets/vendor/jquery/jquery.min.js"></script>
+    <script src="/assets/vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+    <script src="/assets/vendor/chartsjs/Chart.min.js"></script>
+    <script src="/assets/js/dashboard-charts.js"></script>
+    <script src="/assets/js/script.js"></script>
+    <script>
+        var chartData = JSON.parse('{{ chart_json | safe }}');
+        Plotly.newPlot('sales_chart', chartData.data, chartData.layout);
+    </script>
+</body>
+
+</html>
