@@ -6,8 +6,95 @@
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <title>Sales Prediction System</title>
+
+    <!-- Bootstrap CSS -->
     <link href="/assets/vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- Custom CSS for Authentication Pages -->
     <link href="/assets/css/auth.css" rel="stylesheet">
+
+    <!-- Additional Custom Styles -->
+    <style>
+        /* Full-screen background image */
+        body {
+            background-image: url("/assets/img/login.png");
+            background-repeat: no-repeat;
+            background-size: cover;
+            background-position: center center;
+        }
+
+        /* Wrapper for centering content */
+        .wrapper {
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 0 15px;
+        }
+
+        /* Auth content styling */
+        .auth-content {
+            max-width: 500px;
+            width: 100%;
+        }
+
+        /* Card styling with transparency */
+        .card {
+            background-color: rgba(255, 255, 255, 0.85);
+            /* Semi-transparent white */
+            border: none;
+            border-radius: 0.75rem;
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.15);
+            /* Subtle shadow */
+        }
+
+        .card-body {
+            padding: 2rem;
+        }
+
+        /* Form elements */
+        .form-control {
+            border-radius: 0.375rem;
+        }
+
+        /* Button styling */
+        .btn-primary {
+            background-color: #007bff;
+            border-color: #007bff;
+            border-radius: 0.375rem;
+            padding: 0.75rem 1.25rem;
+            font-size: 1rem;
+        }
+
+        .btn-primary:hover {
+            background-color: #0056b3;
+            border-color: #004085;
+        }
+
+        /* Text and link styling */
+        .text-muted a {
+            color: #007bff;
+            text-decoration: none;
+        }
+
+        .text-muted a:hover {
+            text-decoration: underline;
+        }
+
+        /* Logo or graphic styling */
+        .logo img {
+            width: 100px;
+            /* Adjust as needed */
+            margin-bottom: 1rem;
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
+            .auth-content {
+                max-width: 100%;
+            }
+        }
+    </style>
 </head>
 
 <body>
@@ -15,10 +102,23 @@
         <div class="auth-content">
             <div class="card">
                 <div class="card-body text-center">
-                    <div class="mb-4">
-                        <img class="brand" src="/assets/img/bootstraper-logo.png" alt="bootstraper logo">
+
+                    <!-- Header -->
+                    <h4 class="mb-4 text-dark">Login to Your Account</h4>
+
+                    <!-- Illustration or graphic above the form -->
+                    <div>
+                        <img src="/assets/img/LoginImg.png" alt="Login Graphic" width="200" height="auto">
                     </div>
-                    <h6 class="mb-4 text-muted">Login to your System</h6>
+
+                    <!-- Logo -->
+                    <div class="logo mb-4">
+                        <img src="/assets/img/logo.png" alt="Logo" width="200" height="auto" />
+                    </div>
+
+
+
+                    <!-- Flash Messages for Feedback -->
                     {% with messages = get_flashed_messages(with_categories=true) %}
                     {% if messages %}
                     {% for category, message in messages %}
@@ -28,25 +128,38 @@
                     {% endfor %}
                     {% endif %}
                     {% endwith %}
+
+                    <!-- Login Form -->
                     <form action="{{ url_for('login') }}" method="post">
+
+                        <!-- Username Input -->
                         <div class="mb-3 text-start">
-                            <label for="username" class="form-label">User Name</label>
+                            <label for="username" class="form-label">Username</label>
                             <input type="text" class="form-control" id="username" name="username"
-                                placeholder="Enter Username" required>
+                                placeholder="Enter your username" required>
                         </div>
+
+                        <!-- Password Input -->
                         <div class="mb-3 text-start">
                             <label for="password" class="form-label">Password</label>
                             <input type="password" class="form-control" id="password" name="password"
-                                placeholder="Password" required>
+                                placeholder="Enter your password" required>
                         </div>
-                        <button type="submit" class="btn btn-primary shadow-2 mb-4">Login</button>
+
+                        <!-- Submit Button -->
+                        <button type="submit" class="btn btn-primary shadow-2 mb-4 w-100">Login</button>
                     </form>
-                    <p class="mb-0 text-muted">Don't have an account? <a href="{{ url_for('register') }}">Register</a>
+
+                    <!-- Registration Link -->
+                    <p class="mb-0 text-muted">Don't have an account?
+                        <a href="{{ url_for('register') }}">Register here</a>
                     </p>
                 </div>
             </div>
         </div>
     </div>
+
+    <!-- jQuery and Bootstrap JS -->
     <script src="/assets/vendor/jquery/jquery.min.js"></script>
     <script src="/assets/vendor/bootstrap/js/bootstrap.min.js"></script>
 </body>
