@@ -1,10 +1,11 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sales Prediction</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title>Sales Prediction System</title>
     <link href="/assets/vendor/fontawesome/css/fontawesome.min.css" rel="stylesheet">
     <link href="/assets/vendor/fontawesome/css/solid.min.css" rel="stylesheet">
     <link href="/assets/vendor/fontawesome/css/brands.min.css" rel="stylesheet">
@@ -15,85 +16,79 @@
 </head>
 
 <body>
+
     <div class="wrapper">
-        <!-- Sidebar -->
-        <nav id="sidebar" class="active">
-            <div class="sidebar-header">
-                <img src="/assets/img/bootstraper-logo.png" alt="bootraper logo" class="app-logo">
+        <nav id="sidebar" class="active bg-dark">
+            <div class="sidebar-header text-center">
+                <img src="/assets/img/logo.png" width="230" height="35" />
             </div>
-            <ul class="list-unstyled components text-secondary">
+            <ul class="list-unstyled components text-white">
                 <li>
-                    <a href="{{ url_for('index') }}"><i class="fas fa-home"></i> Dashboard</a>
+                    <a href="{{ url_for('index') }}" class="text-white"><i class="fas fa-home"></i> Dashboard</a>
                 </li>
                 <li>
-                    <a href="{{ url_for('predict') }}"><i class="fas fa-chart-line"></i> Predict Sales</a>
+                    <a href="{{ url_for('predict_page') }}" class="text-white"><i class="fas fa-atom"></i> Predict
+                        Data</a>
                 </li>
             </ul>
         </nav>
-        <!-- Page Content -->
+
         <div id="body" class="active">
             <!-- Navbar -->
-            <nav class="navbar navbar-expand-lg navbar-white bg-white">
-                <button type="button" id="sidebarCollapse" class="btn btn-light"><i
-                        class="fas fa-bars"></i><span></span></button>
-                <div class="collapse navbar-collapse" id="navbarSupportedContent">
+            <nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm">
+                <button type="button" id="sidebarCollapse" class="btn btn-outline-primary">
+                    <i class="fas fa-bars"></i>
+                </button>
+                <div class="collapse navbar-collapse">
                     <ul class="nav navbar-nav ms-auto">
-                        <li class="nav-item dropdown">
-                            <div class="nav-dropdown">
-                                <a href="#" id="nav1" class="nav-item nav-link dropdown-toggle text-secondary"
-                                    data-bs-toggle="dropdown" aria-expanded="false">
-                                    <i class="fas fa-user"></i> <span>{{ session.username }}</span> <i
-                                        style="font-size: .8em;" class="fas fa-caret-down"></i>
-                                </a>
-                                <div class="dropdown-menu dropdown-menu-end nav-link-menu" aria-labelledby="nav1">
-                                    <ul class="nav-list">
-                                        <li><a href="{{ url_for('logout') }}" class="dropdown-item"><i
-                                                    class="fas fa-sign-out-alt"></i> Logout</a></li>
-                                    </ul>
-                                </div>
-                            </div>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{{ url_for('logout') }}">
+                                <i class="fas fa-sign-out-alt"></i> Logout
+                            </a>
                         </li>
                     </ul>
                 </div>
             </nav>
-            <!-- Main Content -->
+            <!-- End Navbar -->
+
             <div class="content">
-                <div class="container">
+                <div class="container mt-4">
                     <div class="row">
-                        <div class="col-md-12 page-header">
-                            <div class="page-pretitle">Forecast</div>
-                            <h2 class="page-title">Sales Prediction</h2>
-                        </div>
-                    </div>
-                    <div class="row">
-                        <div class="col-md-12">
-                            <div class="card">
+                        <div class="col-md-8 offset-md-2">
+                            <div class="card shadow-sm">
+                                <div class="card-header bg-primary text-white">
+                                    <h5 class="card-title">Sales Trends Prediction</h5>
+                                </div>
                                 <div class="card-body">
-                                    <form method="POST">
+                                    <form method="POST" action="/predict">
                                         <div class="form-group">
-                                            <label for="year">Year:</label>
+                                            <label for="year">Year</label>
                                             <input type="number" class="form-control" id="year" name="year" required
-                                                min="2024" max="2030">
+                                                placeholder="Enter Year">
                                         </div>
-                                        <div class="form-group">
-                                            <label for="category">Category:</label>
-                                            <select class="form-control" id="category" name="category" required>
+
+                                        <div class="form-group mt-3">
+                                            <label for="month">Month</label>
+                                            <input type="text" class="form-control" id="month" name="month" required
+                                                placeholder="Enter Month">
+                                        </div>
+
+                                        <div class="form-group mt-3">
+                                            <label for="sales_cat">Sales Category</label>
+                                            <select class="form-control" name="sales_cat" id="sales_cat" required>
+                                                <option value="">Not Selected</option>
                                                 <option value="Corporate">Corporate</option>
                                                 <option value="Retail">Retail</option>
                                                 <option value="Show Rooms">Show Rooms</option>
                                             </select>
                                         </div>
-                                        <button type="submit" class="btn btn-primary">Predict</button>
+
+                                        <button type="submit" class="btn btn-primary mt-4 w-100">Predict</button>
                                     </form>
 
-                                    {% if prediction %}
-                                    <div class="mt-5">
-                                        <h2>Prediction Results</h2>
-                                        <p>Predicted sales for {{ category }} in {{ year }}: ${{
-                                            "{:,.2f}".format(prediction) }}</p>
-                                        <p>Lower bound (95% CI): ${{ "{:,.2f}".format(lower_bound) }}</p>
-                                        <p>Upper bound (95% CI): ${{ "{:,.2f}".format(upper_bound) }}</p>
-                                        <div id="predictionChart"></div>
+                                    {% if prediction_text %}
+                                    <div class="alert alert-success mt-4 text-center">
+                                        <h4>{{ prediction_text }}</h4>
                                     </div>
                                     {% endif %}
                                 </div>
@@ -104,25 +99,12 @@
             </div>
         </div>
     </div>
+
     <script src="/assets/vendor/jquery/jquery.min.js"></script>
     <script src="/assets/vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+    <script src="/assets/vendor/chartsjs/Chart.min.js"></script>
+    <script src="/assets/js/dashboard-charts.js"></script>
     <script src="/assets/js/script.js"></script>
-    <script>
-        {% if prediction %}
-        var data = [{
-            x: ['Lower Bound', 'Prediction', 'Upper Bound'],
-            y: [{{ lower_bound }}, {{ prediction }}, { { upper_bound } }],
-        type: 'bar'
-        }];
-
-        var layout = {
-            title: 'Sales Prediction with 95% Confidence Interval',
-            yaxis: { title: 'Sales Value ($)' }
-        };
-
-        Plotly.newPlot('predictionChart', data, layout);
-        {% endif %}
-    </script>
 </body>
 
 </html>

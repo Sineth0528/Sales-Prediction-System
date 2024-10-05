@@ -1,18 +1,22 @@
-import pandas as pd
-import mysql.connector
-from mysql.connector import Error
-from flask import Flask, render_template, request, redirect, url_for, session, flash, send_from_directory
-import plotly.express as px
-import plotly.utils
+import os
 import json
 from datetime import datetime
-import os
-from werkzeug.security import generate_password_hash, check_password_hash
 from functools import wraps
-import joblib
+
+import pandas as pd
 import numpy as np
 from scipy.stats import norm
+import mysql.connector
+from mysql.connector import Error
+import joblib
+
+from flask import Flask, render_template, request, redirect, url_for, session, flash, send_from_directory
+from werkzeug.security import generate_password_hash, check_password_hash
+
+import plotly.express as px
+import plotly.utils
 from sklearn.preprocessing import LabelEncoder
+
 
 app = Flask(__name__, static_url_path='/assets', static_folder='assets')
 app.secret_key = "admin8074"
@@ -212,14 +216,64 @@ def index():
 
     return render_template('index.html', chart_json=chart_json, card_data=card_data, maxdate=maxdate)
 
-def prepare_input_data(year, category):
-    # Create a DataFrame with the input data
+# Function to fetch data from the database
+def fetch_data_from_db(query):
+    connection = create_db_connection("localhost", "root", "", "sales_predic_sys")  # Adjust your DB credentials
+    cursor = connection.cursor()
+    cursor.execute(query)
+    result = cursor.fetchall()
+    connection.close()
+    
+    # Convert to DataFrame
+    df = pd.DataFrame(result, columns=['sales_cat', 'net_value', 'year', 'month'])
+    return df
+
+# Fetch the sales data from the MySQL database
+df = fetch_data_from_db("SELECT * FROM sales_data")
+
+# Process the data
+df['date'] = pd.to_datetime(df['year'].astype(str) + '-' + df['month'], format='%Y-%B')
+df['month_num'] = df['date'].dt.month
+df['year_num'] = df['date'].dt.year
+df['quarter'] = df['date'].dt.quarter
+df['is_holiday_season'] = ((df['month_num'] == 11) | (df['month_num'] == 12)).astype(int)
+df['days_in_month'] = df['date'].dt.days_in_month
+
+# Recreate the LabelEncoder using the sales categories from the dataset
+le = LabelEncoder()
+df['sales_cat_encoded'] = le.fit_transform(df['sales_cat'])
+
+# Feature engineering (add rolling means, lag features, etc.)
+df['sales_growth'] = df.groupby('sales_cat')['net_value'].pct_change()
+df['cumulative_sales'] = df.groupby('sales_cat')['net_value'].cumsum()
+df['sales_ma_3'] = df.groupby('sales_cat')['net_value'].rolling(window=3).mean().reset_index(0, drop=True)
+df['sales_ma_6'] = df.groupby('sales_cat')['net_value'].rolling(window=6).mean().reset_index(0, drop=True)
+df['sales_ma_12'] = df.groupby('sales_cat')['net_value'].rolling(window=12).mean().reset_index(0, drop=True)
+
+# Lag features
+for lag in [1, 3, 6, 12]:
+    df[f'net_value_lag_{lag}'] = df.groupby('sales_cat')['net_value'].shift(lag)
+
+# Rolling mean features
+for window in [3, 6, 12]:
+    df[f'net_value_rolling_mean_{window}'] = df.groupby('sales_cat')['net_value'].rolling(window=window).mean().reset_index(0, drop=True)
+
+df.dropna(inplace=True)  # Ensure no missing values in the dataset
+
+# Define features for the model
+features = ['year_num', 'month_num', 'sales_cat_encoded', 'quarter', 'is_holiday_season', 'days_in_month',
+            'net_value_lag_1', 'net_value_lag_3', 'net_value_lag_6', 'net_value_lag_12',
+            'net_value_rolling_mean_3', 'net_value_rolling_mean_6', 'net_value_rolling_mean_12',
+            'sales_growth', 'cumulative_sales', 'sales_ma_3', 'sales_ma_6', 'sales_ma_12']
+
+# Function to predict sales with intervals
+def predict_net_value_with_intervals(year, month, sales_cat, percentile=95):
     input_df = pd.DataFrame({
         'year': [year],
-        'month': ['January'],  # You might want to allow the user to input the month as well
-        'sales_cat': [category]
+        'month': [month],
+        'sales_cat': [sales_cat]
     })
-    
+
     # Preprocess input data
     input_df['date'] = pd.to_datetime(input_df['year'].astype(str) + '-' + input_df['month'], format='%Y-%B')
     input_df['month_num'] = input_df['date'].dt.month
@@ -227,63 +281,52 @@ def prepare_input_data(year, category):
     input_df['quarter'] = input_df['date'].dt.quarter
     input_df['is_holiday_season'] = ((input_df['month_num'] == 11) | (input_df['month_num'] == 12)).astype(int)
     input_df['days_in_month'] = input_df['date'].dt.days_in_month
-    
-    # Encode the sales_cat
-    input_df['sales_cat_encoded'] = le.transform(input_df['sales_cat'])
-    
-    # Add other necessary features (you might need to adjust these based on your actual model)
-    input_df['sales_growth'] = 0  # You may want to use an average or recent growth rate
-    input_df['cumulative_sales'] = 0  # You may want to calculate this based on historical data
-    input_df['sales_ma_3'] = 0
-    input_df['sales_ma_6'] = 0
-    input_df['sales_ma_12'] = 0
-    
-    # Add lag features and rolling mean features
+    input_df['sales_cat_encoded'] = le.transform([sales_cat])
+
+    # Add engineered features
+    input_df['sales_growth'] = 0
+    input_df['cumulative_sales'] = df.groupby('sales_cat')['net_value'].sum().loc[sales_cat]
+    input_df['sales_ma_3'] = df[df['sales_cat'] == sales_cat]['net_value'].tail(3).mean()
+    input_df['sales_ma_6'] = df[df['sales_cat'] == sales_cat]['net_value'].tail(6).mean()
+    input_df['sales_ma_12'] = df[df['sales_cat'] == sales_cat]['net_value'].tail(12).mean()
+
+    # Add lag features
     for lag in [1, 3, 6, 12]:
-        input_df[f'net_value_lag_{lag}'] = 0
+        input_df[f'net_value_lag_{lag}'] = df[df['sales_cat'] == sales_cat]['net_value'].iloc[-lag]
+
+    # Add rolling mean features
     for window in [3, 6, 12]:
-        input_df[f'net_value_rolling_mean_{window}'] = 0
-    
-    # Create a new DataFrame with the correct feature order
-    input_data = pd.DataFrame(columns=feature_names)
-    for feature in feature_names:
-        if feature in input_df.columns:
-            input_data[feature] = input_df[feature]
-        else:
-            input_data[feature] = 0  # or some appropriate default value
+        input_df[f'net_value_rolling_mean_{window}'] = df[df['sales_cat'] == sales_cat]['net_value'].tail(window).mean()
 
-    return input_data
+    input_features = input_df[features]
 
-def predict_net_value_with_intervals(input_data, percentile=95):
-    # Make prediction using the best estimator
-    prediction = model.best_estimator_.predict(input_data)
-    
-    # Calculate intervals (you might need to adjust this based on your actual model and data)
-    # For this example, we'll use a simple method. In practice, you might want to use a more sophisticated approach.
-    std_resid = 1000000  # This is a placeholder. You should calculate this based on your model's performance on test data.
-    z_score = norm.ppf((1 + percentile/100) / 2)
+    # Make prediction
+    prediction = model.predict(input_features)
+
+    # Calculate prediction intervals
+    std_resid = np.std(df['net_value'] - model.predict(df[features]))
+    z_score = norm.ppf((1 + percentile / 100) / 2)
     interval = z_score * std_resid
-    lower_bound = prediction - interval
-    upper_bound = prediction + interval
-    
-    return prediction[0], max(0, lower_bound[0]), upper_bound[0]
+    lower = prediction - interval
+    upper = prediction + interval
 
-@app.route('/predict', methods=['GET', 'POST'])
+    return prediction[0], lower[0], upper[0]
+
+@app.route('/predict_page')
 @login_required
-def predict():
-    if request.method == 'POST':
-        year = int(request.form['year'])
-        category = request.form['category']
-        
-        # Prepare input data for prediction
-        input_data = prepare_input_data(year, category)
-        
-        # Make prediction
-        prediction, lower_bound, upper_bound = predict_net_value_with_intervals(input_data)
-        
-        return render_template('predict.html', prediction=prediction, lower_bound=lower_bound, upper_bound=upper_bound, year=year, category=category)
-    
+def predict_page():
     return render_template('predict.html')
+
+
+@app.route('/predict', methods=['POST'])
+def predict():
+    year = int(request.form['year'])
+    month = request.form['month']
+    sales_cat = request.form['sales_cat']
+    
+    prediction, lower, upper = predict_net_value_with_intervals(year, month, sales_cat)
+    
+    return render_template('predict.html', prediction_text=f'Predicted Sales in {year} - {month} - {sales_cat}: Rs. {prediction:.2f}, Interval: [{lower:.2f}, {upper:.2f}]')
 
 if __name__ == '__main__':
     app.run(debug=True)

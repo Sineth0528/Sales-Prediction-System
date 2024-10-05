@@ -19,14 +19,14 @@
     <div class="wrapper">
         <nav id="sidebar" class="active">
             <div class="sidebar-header">
-                <img src="/assets/img/bootstraper-logo.png" alt="bootraper logo" class="app-logo">
+                <img src="/assets/img/logo.png" width="230" height="35" />
             </div>
             <ul class="list-unstyled components text-secondary">
                 <li>
                     <a href="{{ url_for('index') }}"><i class="fas fa-home"></i> Dashboard</a>
                 </li>
                 <li>
-                    <a href="{{ url_for('predict') }}"><i class="fas fa-atom"></i>Predict Data</a>
+                    <a href="{{ url_for('predict_page') }}"><i class="fas fa-atom"></i>Predict Data</a>
                 </li>
             </ul>
         </nav>
@@ -40,7 +40,7 @@
                 <div class="collapse navbar-collapse" id="navbarSupportedContent">
                     <ul class="nav navbar-nav ms-auto">
                         <li class="nav-item">
-                            <a class="nav-link" href="{{ url_for('logout') }}">
+                            <a class="nav-link" href="{{ url_for('logout') }}" onclick="return confirmLogout()">
                                 <i class="fas fa-sign-out-alt"></i> Logout
                             </a>
                         </li>
@@ -168,6 +168,11 @@
     <script>
         var chartData = JSON.parse('{{ chart_json | safe }}');
         Plotly.newPlot('sales_chart', chartData.data, chartData.layout);
+
+        function confirmLogout() {
+            return confirm("Are you sure you want to log out?");
+        }
+
     </script>
 </body>
 
